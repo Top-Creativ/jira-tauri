@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write # Ensure the token has write access to create releases
     strategy:
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
@@ -20,12 +22,25 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
+          cache: 'npm' # Cache npm dependencies
 
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           override: true
+
+      - name: Cache Rust crates
+        uses: actions/cache@v3
+        id: rust-cache
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
 
       - name: Install Tauri CLI
         run: npm install -g @tauri-apps/cli
@@ -74,6 +89,8 @@ jobs:
   release:
     runs-on: ubuntu-latest
     needs: build
+    permissions:
+      contents: write # Ensure the token has write access to create releases
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v3
@@ -91,3 +108,4 @@ jobs:
             artifacts/tauri-build-windows-latest/**/*
             artifacts/tauri-build-macos-latest/**/*
             artifacts/tauri-build-ubuntu-latest/**/*
+          token: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }} # Use PAT if available, otherwise fallback to GITHUB_TOKEN
