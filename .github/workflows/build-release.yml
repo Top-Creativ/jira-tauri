@@ -22,7 +22,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
-          # Removed the cache option since there's no package-lock.json
 
       - name: Install Rust
         uses: actions-rs/toolchain@v1
@@ -97,6 +96,10 @@ jobs:
         with:
           path: artifacts
 
+      - name: Debug artifacts directory
+        run: |
+          ls -R artifacts
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
@@ -105,7 +108,7 @@ jobs:
           body: |
             Tauri app built for Windows, macOS, and Linux.
           files: |
-            artifacts/tauri-build-windows-latest/**/*
-            artifacts/tauri-build-macos-latest/**/*
-            artifacts/tauri-build-ubuntu-latest/**/*
+            artifacts/tauri-build-windows-latest/**/*.msi
+            artifacts/tauri-build-macos-latest/**/*.app.tar.gz
+            artifacts/tauri-build-ubuntu-latest/**/*.deb
           token: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }} # Use PAT if available, otherwise fallback to GITHUB_TOKEN
